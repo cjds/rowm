@@ -76,15 +76,31 @@ To split for existing frames or containers:
 `Mod4-b` on a different frame will add the selection as a vertical child.
 
 #### Volume
-Can be controlled with `Mod4-F1` to mute, and `Mod4-F2/F3` to raise/lower volume.
+Can be controlled with mute button to mute, and volume up/down to raise/lower volume. If you do not have these buttons you can change the mapping in `config.go`
 
 #### Brightness
-Can be raised/lowered with `Mod4-F11/F12`. If brightness controls are not working, check what folder exists in `/sys/class/backlight/` and change the Backlight value in `config.go` to match.
+If brightness controls are not working, check what folder exists in `/sys/class/backlight/` and change the Backlight value in `config.go` to match.
 
-# Monitor hotplugging
+#### Switching the scroll direction
+Edit the following file `/usr/share/X11/xorg.conf.d/40-libinput.conf`. Find the section with the `touchpad` identifier and add the following line.
+
+```
+Section "InputClass"
+        Identifier "libinput touchpad catchall"
+        ...
+        Option "NaturalScrolling" "True"
+EndSection
+```
+You can also switch it for mice by changing the `pointer` catchall.
+
+## Monitor hotplugging
 If you are planning on hotplugging monitors, it is recommended you install arandr and autorandr.
 
 `arandr` is a graphical utility to help you configure your screens. Once you have them configured how you like, use `autorandr --save <profile>` to save the configuration and `autorandr --default <profile>` to make it default. Once this is done the monitor setup should stay sticky through disconnects and reconnects.
 
-# Logging
+
+
+
+
+## Logging
 To tail the logs run `journalctl -f /usr/lib/gdm3/gdm-x-session`.
