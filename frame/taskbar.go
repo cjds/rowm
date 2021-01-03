@@ -499,37 +499,31 @@ func (t *Taskbar) Update(ctx *Context) {
 		now.Format(ctx.Config.TaskbarTimeFormat),
 	)
 
-	batteries, err := battery.GetAll()
+	batteries, _ := battery.GetAll()
 	bat, charging := func() (int, string) {
-		if err != nil || len(batteries) == 0 {
+		if len(batteries) == 0 {
 			return t.History.LastBattery, t.History.LastBatteryState
 		}
 
-		lowest_bat := 100
+		level := int(batteries[0].Current / batteries[0].Full * 100)
 		state := "∘"
-		for _, bat := range batteries {
-			per := int(batteries[0].Current / batteries[0].Full * 100)
-			if per < lowest_bat {
-				lowest_bat = per
-				if bat.State == battery.Charging {
-					state = "⇡"
-				}
-			}
+		if batteries[0].State == battery.Charging {
+			state = "⇡"
 		}
 
 		for _, lvl := range ctx.Config.BatteryWarningLevels {
-			if t.History.LastBattery > lvl && lowest_bat <= lvl {
+			if t.History.LastBattery > lvl && level <= lvl {
 				msgPrompt := prompt.NewMessage(ctx.X, prompt.DefaultMessageTheme, prompt.DefaultMessageConfig)
 				for _, screen:= range ctx.Screens {
-				  msgPrompt.Show(screen.ToXRect(), fmt.Sprintf("Warning: battery at %d%%", lowest_bat), ctx.Config.BatteryWarningDuration, func(msg *prompt.Message) {})
+				  msgPrompt.Show(screen.ToXRect(), fmt.Sprintf("Warning: battery at %d%%", level), ctx.Config.BatteryWarningDuration, func(msg *prompt.Message) {})
 				}
 				break
 			}
 		}
 
-		t.History.LastBattery = lowest_bat
+		t.History.LastBattery = level
 		t.History.LastBatteryState = state
-		return lowest_bat, state
+		return level, state
 	}()
 
 	text.DrawText(

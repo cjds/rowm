@@ -15,7 +15,6 @@ type StringWithHelp struct {
 	Help	string	`mapstructure:"help"`
 }
 
-
 type Config struct {
 	Lock                      string `mapstructure:"lock"`
 	Shell                     string `mapstructure:"shell"`
@@ -133,23 +132,23 @@ func DefaultConfig() Config {
 		Shell:                   "/bin/bash",
 		Lock:                    "Mod4-l",
 		TabByFrame:              true,
-		TabForward:              StringWithHelp{Data: "Mod1-tab", Help:"Tab Forward"},
-		TabBackward:             StringWithHelp{Data: "Mod1-Shift-tab", Help:"Tab Backward"},
+		TabForward:              StringWithHelp{Data: "Mod1-tab", Help: "Tab Forward"},
+		TabBackward:             StringWithHelp{Data: "Mod1-Shift-tab", Help: "Tab Backward"},
 		ButtonDrag:              "1",
 		ButtonClick:             "1",
-		SplitVertical:           StringWithHelp{Data: "Mod4-r", Help:"Split Vertically"},
-		SplitHorizontal:         StringWithHelp{Data: "Mod4-e", Help:"Split Horizontally"},
-		RunCmd:                  StringWithHelp{Data: "Mod4-f", Help:"Run Command"},
+		SplitVertical:           StringWithHelp{Data: "Mod4-r", Help: "Split Vertically"},
+		SplitHorizontal:         StringWithHelp{Data: "Mod4-e", Help: "Split Horizontally"},
+		RunCmd:                  StringWithHelp{Data: "Mod4-f", Help: "Run Command"},
 		Shutdown:                "Mod4-BackSpace",
-		CloseFrame:              StringWithHelp{Data: "Mod4-d", Help:"Close Frame"},
-		ToggleExpandFrame:       StringWithHelp{Data: "Mod4-x", Help:"Toggle Expanded Frame"},
+		CloseFrame:              StringWithHelp{Data: "Mod4-d", Help: "Close Frame"},
+		ToggleExpandFrame:       StringWithHelp{Data: "Mod4-x", Help: "Toggle Expanded Frame"},
 		ToggleExternalDecorator: "Mod4-h",
 		ToggleTaskbar:           "Mod4-s",
-		WindowUp:                 StringWithHelp{Data: "Mod4-up", Help:"Window up"},
-		WindowDown:               StringWithHelp{Data: "Mod4-down", Help:"Window Down"},
-		WindowLeft:               StringWithHelp{Data: "Mod4-left", Help:"Window Left"},
-		WindowRight:              StringWithHelp{Data: "Mod4-right", Help:"Window Right"},
-		PopFrame:                 StringWithHelp{Data: "Mod4-q", Help:"Pop Frame"},
+		WindowUp:                StringWithHelp{Data: "Mod4-up", Help: "Window up"},
+		WindowDown:              StringWithHelp{Data: "Mod4-down", Help: "Window Down"},
+		WindowLeft:              StringWithHelp{Data: "Mod4-left", Help: "Window Left"},
+		WindowRight:             StringWithHelp{Data: "Mod4-right", Help: "Window Right"},
+		PopFrame:                StringWithHelp{Data: "Mod4-q", Help: "Pop Frame"},
 		ResetSize:               "Mod4-Shift-up",
 		Minimize:                "Mod4-Shift-down",
 		VolumeUp:                "XF86AudioRaiseVolume",
