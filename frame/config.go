@@ -23,6 +23,7 @@ type Config struct {
 	TabBackward               StringWithHelp `mapstructure:"tab_backward"`
 	ButtonDrag                string `mapstructure:"button_drag"`
 	ButtonClick               string `mapstructure:"button_click"`
+	ButtonRightClick          string `mapstructure:"button_right_click"`
 	SplitVertical             StringWithHelp `mapstructure:"split_vertical"`
 	SplitHorizontal           StringWithHelp `mapstructure:"split_horizontal"`
 	RunCmd                    StringWithHelp `mapstructure:"run_cmd"`
@@ -114,12 +115,12 @@ func LoadConfig() Config {
 	viper.AddConfigPath("/etc/rowm/")
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Println("Didn't load config file:", err)
+		log.Println("Didn't load config file ", viper.ConfigFileUsed(), ": ", err)
 	}
 
 	err = viper.Unmarshal(&conf)
 	if err != nil {
-		log.Println("Unable to decode into config struct:", err)
+		log.Println("Unable to decode into config struct ", viper.ConfigFileUsed(), " :", err)
 	}
 	return conf
 }
@@ -136,6 +137,7 @@ func DefaultConfig() Config {
 		TabBackward:             StringWithHelp{Data: "Mod1-Shift-tab", Help: "Tab Backward"},
 		ButtonDrag:              "1",
 		ButtonClick:             "1",
+		ButtonRightClick:        "3",
 		SplitVertical:           StringWithHelp{Data: "Mod4-r", Help: "Split Vertically"},
 		SplitHorizontal:         StringWithHelp{Data: "Mod4-e", Help: "Split Horizontally"},
 		RunCmd:                  StringWithHelp{Data: "Mod4-f", Help: "Run Command"},

@@ -40,6 +40,15 @@ func (c *Container) Raise(ctx *Context) {
 		f.RaiseDecoration(ctx)
 	})
 	ctx.Taskbar.Raise(ctx)
+
+	// Raise the always on top windows
+	if !ctx.Locked {
+		for _, a := range ctx.AlwaysOnTop {
+			if c != a {
+			a.Raise(ctx)
+			}
+		}
+	}
 }
 
 func (c *Container) ActiveRoot() *Frame {
@@ -102,6 +111,24 @@ func (c *Container) ChangeMinimizationState(ctx *Context) {
 		ext.Focus(xwindow.New(ctx.X, ctx.X.RootWin()))
 	}
 	ctx.Taskbar.UpdateContainer(ctx, c)
+}
+
+func (c *Container) ChangeMaximizationState(ctx *Context) {
+	screen, _, _ := ctx.GetScreenForShape(c.Shape)
+	s := AnchorShape(ctx, screen, FULL)
+	if c.Shape == s {
+		c.MoveResizeShape(ctx, ctx.DefaultShapeForScreen(screen))
+	} else {
+		c.MoveResizeShape(ctx, s)
+	}
+}
+
+func (c *Container) ChangeAlwaysOnTopState(ctx *Context, turn_on bool) {
+	if turn_on {
+		ctx.AlwaysOnTop[c.Root.Window.Id] = c
+	} else {
+		delete(ctx.AlwaysOnTop, c.Root.Window.Id)
+	}
 }
 
 func (c *Container) UpdateFrameMappings(ctx *Context) {

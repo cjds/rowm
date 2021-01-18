@@ -39,6 +39,7 @@ func AttachWindow(ctx *Context, target *Frame, partitition PartitionType, window
 			}
 			ap.ChildB = nf
 			nf.Shape = nf.CalcShape(ctx)
+			nf.Window.Stack(xproto.StackModeAbove)
 			ctx.Tracked[window] = nf
 
 			if err := ext.MapChecked(nf.Window); err != nil {

@@ -126,18 +126,27 @@ func GeneratePieces(ctx *Context, c *Container) error {
 	return err
 }
 
+func (c *Container) CleanupUI(ctx *Context) {
+	if ctx.RightClickMenu != nil {
+		ctx.RightClickMenu.Destroy()
+	}
+}
+
+
 func (c *Container) AddGrabHook(ctx *Context) {
 	mousebind.Drag(
 		ctx.X, c.Decorations.Grab.Window.Id, c.Decorations.Grab.Window.Id, ctx.Config.ButtonDrag, true,
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) (bool, xproto.Cursor) {
 			c.DragContext = GenerateDragContext(ctx, c, nil, rX, rY)
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 			return true, ctx.Cursors[xcursor.Circle]
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			dX := rX - c.DragContext.MouseX
 			dY := rY - c.DragContext.MouseY
 			c.MoveResize(ctx, c.DragContext.Container.X+dX, c.DragContext.Container.Y+dY, c.Shape.W, c.Shape.H)
+			c.CleanupUI(ctx)
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			now := time.Now()
@@ -152,6 +161,7 @@ func (c *Container) AddGrabHook(ctx *Context) {
 			}
 			c.RaiseFindFocus(ctx)
 			c.LastGrabTime = now
+			c.CleanupUI(ctx)
 		},
 	)
 }
@@ -160,6 +170,7 @@ func (c *Container) AddCloseHook(ctx *Context) error {
 	return mousebind.ButtonPressFun(
 		func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
 			c.Root.Close(ctx)
+			c.CleanupUI(ctx)
 		}).Connect(ctx.X, c.Decorations.Close.Window.Id, ctx.Config.ButtonClick, false, true)
 }
 
@@ -167,19 +178,15 @@ func (c *Container) AddMinimizeHook(ctx *Context) error {
 	return mousebind.ButtonPressFun(
 		func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
 			c.ChangeMinimizationState(ctx)
+			c.CleanupUI(ctx)
 		}).Connect(ctx.X, c.Decorations.Minimize.Window.Id, ctx.Config.ButtonClick, false, true)
 }
 
 func (c *Container) AddMaximizeHook(ctx *Context) error {
 	return mousebind.ButtonPressFun(
 		func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
-			screen, _, _ := ctx.GetScreenForShape(c.Shape)
-			s := AnchorShape(ctx, screen, FULL)
-			if c.Shape == s {
-				c.MoveResizeShape(ctx, ctx.DefaultShapeForScreen(screen))
-			} else {
-				c.MoveResizeShape(ctx, s)
-			}
+			c.ChangeMaximizationState(ctx)
+			c.CleanupUI(ctx)
 		}).Connect(ctx.X, c.Decorations.Maximize.Window.Id, ctx.Config.ButtonClick, false, true)
 }
 
@@ -189,6 +196,7 @@ func (c *Container) AddTopHook(ctx *Context) {
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) (bool, xproto.Cursor) {
 			c.DragContext = GenerateDragContext(ctx, c, nil, rX, rY)
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 			return true, ctx.Cursors[xcursor.Circle]
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
@@ -196,11 +204,36 @@ func (c *Container) AddTopHook(ctx *Context) {
 			h := ext.IMax(origYEnd-rY, ctx.Config.MinShape().H)
 			y := origYEnd - h
 			c.MoveResize(ctx, c.DragContext.Container.X, y, c.DragContext.Container.W, h)
+			c.CleanupUI(ctx)
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 		},
 	)
+
+	// Top bar supports right click menu 
+	mousebind.ButtonPressFun(
+		func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
+			if ctx.RightClickMenu != nil {
+				ctx.RightClickMenu.Destroy()
+			}
+			ctx.RightClickMenu = NewRightClickMenu(ctx)
+			canc := func(inp *RightClickMenu) {
+				ctx.RightClickMenu.Destroy()
+			}
+
+			always_on_top := func(ctx *Context) {
+				_, present := ctx.AlwaysOnTop[c.Root.Window.Id]
+				if present {
+					c.ChangeAlwaysOnTopState(ctx, false)
+				} else {
+					c.ChangeAlwaysOnTopState(ctx, true)
+				}
+			}
+			ctx.RightClickMenu.Show(ev.RootX, ev.RootY, canc, c.ChangeMaximizationState,
+		                                c.ChangeMinimizationState, always_on_top)
+	}).Connect(ctx.X, c.Decorations.Top.Window.Id, ctx.Config.ButtonRightClick, false, true)
 }
 
 func (c *Container) AddBottomHook(ctx *Context) {
@@ -209,14 +242,17 @@ func (c *Container) AddBottomHook(ctx *Context) {
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) (bool, xproto.Cursor) {
 			c.DragContext = GenerateDragContext(ctx, c, nil, rX, rY)
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 			return true, ctx.Cursors[xcursor.Circle]
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			h := ext.IMax(rY-c.DragContext.Container.Y, ctx.Config.MinShape().H)
 			c.MoveResize(ctx, c.DragContext.Container.X, c.DragContext.Container.Y, c.DragContext.Container.W, h)
+			c.CleanupUI(ctx)
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 		},
 	)
 }
@@ -227,14 +263,17 @@ func (c *Container) AddRightHook(ctx *Context) {
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) (bool, xproto.Cursor) {
 			c.DragContext = GenerateDragContext(ctx, c, nil, rX, rY)
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 			return true, ctx.Cursors[xcursor.Circle]
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			w := ext.IMax(rX-c.DragContext.Container.X, ctx.Config.MinShape().W)
 			c.MoveResize(ctx, c.DragContext.Container.X, c.DragContext.Container.Y, w, c.DragContext.Container.H)
+			c.CleanupUI(ctx)
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 		},
 	)
 }
@@ -245,6 +284,7 @@ func (c *Container) AddLeftHook(ctx *Context) {
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) (bool, xproto.Cursor) {
 			c.DragContext = GenerateDragContext(ctx, c, nil, rX, rY)
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 			return true, ctx.Cursors[xcursor.Circle]
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
@@ -252,9 +292,11 @@ func (c *Container) AddLeftHook(ctx *Context) {
 			w := ext.IMax(origXEnd-rX, ctx.Config.MinShape().W)
 			x := origXEnd - w
 			c.MoveResize(ctx, x, c.DragContext.Container.Y, w, c.DragContext.Container.H)
+			c.CleanupUI(ctx)
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 		},
 	)
 }
@@ -265,15 +307,18 @@ func (c *Container) AddBottomRightHook(ctx *Context) {
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) (bool, xproto.Cursor) {
 			c.DragContext = GenerateDragContext(ctx, c, nil, rX, rY)
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 			return true, ctx.Cursors[xcursor.Circle]
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			w := ext.IMax(rX-c.DragContext.Container.X, ctx.Config.MinShape().W)
 			h := ext.IMax(rY-c.DragContext.Container.Y, ctx.Config.MinShape().H)
 			c.MoveResize(ctx, c.DragContext.Container.X, c.DragContext.Container.Y, w, h)
+			c.CleanupUI(ctx)
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 		},
 	)
 }
@@ -284,6 +329,7 @@ func (c *Container) AddBottomLeftHook(ctx *Context) {
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) (bool, xproto.Cursor) {
 			c.DragContext = GenerateDragContext(ctx, c, nil, rX, rY)
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 			return true, ctx.Cursors[xcursor.Circle]
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
@@ -292,9 +338,11 @@ func (c *Container) AddBottomLeftHook(ctx *Context) {
 			x := origXEnd - w
 			h := ext.IMax(rY-c.DragContext.Container.Y, ctx.Config.MinShape().H)
 			c.MoveResize(ctx, x, c.DragContext.Container.Y, w, h)
+			c.CleanupUI(ctx)
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 		},
 	)
 }
@@ -305,6 +353,7 @@ func (c *Container) AddTopRightHook(ctx *Context) {
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) (bool, xproto.Cursor) {
 			c.DragContext = GenerateDragContext(ctx, c, nil, rX, rY)
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 			return true, ctx.Cursors[xcursor.Circle]
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
@@ -313,9 +362,11 @@ func (c *Container) AddTopRightHook(ctx *Context) {
 			h := ext.IMax(origYEnd-rY, ctx.Config.MinShape().H)
 			y := origYEnd - h
 			c.MoveResize(ctx, c.DragContext.Container.X, y, w, h)
+			c.CleanupUI(ctx)
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 		},
 	)
 }
@@ -326,6 +377,7 @@ func (c *Container) AddTopLeftHook(ctx *Context) {
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) (bool, xproto.Cursor) {
 			c.DragContext = GenerateDragContext(ctx, c, nil, rX, rY)
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 			return true, ctx.Cursors[xcursor.Circle]
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
@@ -336,9 +388,11 @@ func (c *Container) AddTopLeftHook(ctx *Context) {
 			y := origYEnd - h
 			x := origXEnd - w
 			c.MoveResize(ctx, x, y, w, h)
+			c.CleanupUI(ctx)
 		},
 		func(X *xgbutil.XUtil, rX, rY, eX, eY int) {
 			c.RaiseFindFocus(ctx)
+			c.CleanupUI(ctx)
 		},
 	)
 }

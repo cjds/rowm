@@ -93,8 +93,8 @@ func Split(ctx *frame.Context) *frame.Frame {
 		var suggestions []string
 		for _, option := range strings.Split(string(out), " ") {
 			if strings.HasPrefix(option, inp) {
-			suggestions = append(suggestions, option)
-		}
+				suggestions = append(suggestions, option)
+			}
 		}
 		return suggestions
 	}

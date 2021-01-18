@@ -257,7 +257,9 @@ func (inp *InputWithSuggestion) keyResponse() xevent.KeyPressFun {
 			}
 			inp.Hide()
 		case keybind.KeyMatch(X, inp.config.CompleteKey, mods, kc):
-			inp.input.SetString(suggestionSlice[inp.suggestionIndex])
+			if len(suggestionSlice) != 0 {
+				inp.input.SetString(suggestionSlice[inp.suggestionIndex])
+			}
                         inp.suggestionIndex = 0
 		case keybind.KeyMatch(X, inp.config.PrevSuggestionKey, mods, kc):
 			inp.suggestionIndex--

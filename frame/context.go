@@ -60,6 +60,8 @@ type Context struct {
 	LastLockChange         time.Time                         // Last time we went from locked->unlocked or reverse
 	Injector               *sideloop.Injector                // Utility for inserting work between X events
 	Gotos                  map[string]xproto.Window          // Mapping of shortcut minimize/focus keys for windows
+	RightClickMenu         *RightClickMenu			 // Right Click Menu, is a menu, when you right click
+	AlwaysOnTop            map[xproto.Window]*Container      // List of Always On Top Windows
 }
 
 // NewContext will create a new context but also populate screen backgrounds, create the taskbar, and generate the cursor cache
@@ -81,6 +83,7 @@ func NewContext(x *xgbutil.XUtil, inj *sideloop.Injector) (*Context, error) {
 	}
 	c.UpdateScreens()
 	c.Taskbar = NewTaskbar(c)
+	c.AlwaysOnTop = make(map[xproto.Window]*Container)
 	if err != nil {
 		log.Fatal(err)
 	}
