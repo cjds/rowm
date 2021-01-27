@@ -88,7 +88,7 @@ func (r *RightClickMenu) Show(x int16, y int16, canceled func(inp *RightClickMen
 	padding := DefaultRightClickTheme.Padding
 	bs := DefaultRightClickTheme.BorderSize
 	width := DefaultRightClickTheme.MenuWidth
-	r.bBack.MoveResize(left, top, width, top + 5*bs + 2*padding)
+	r.bBack.MoveResize(left, top, width, 5*bs + 3*padding)
 	r.bTop.MoveResize(left, top + padding + bs, width, bs)
 	r.Maximize.MoveResize(left, top + bs, width, padding)
 	r.bMid.MoveResize(left, top + 2*padding + 2*bs, width, bs)
@@ -115,8 +115,8 @@ func (r *RightClickMenu) Destroy() {
 	r.bTop.Destroy()
 	r.bMid.Destroy()
 	r.bBot.Destroy()
+	r.bBack.Destroy()
 }
-
 
 type RightClickTheme struct {
 	BgColor     render.Color
